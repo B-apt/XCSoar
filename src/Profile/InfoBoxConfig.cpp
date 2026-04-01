@@ -131,6 +131,10 @@ Profile::Load(const ProfileMap &map, InfoBoxSettings &settings)
         sprintf(panel.name.buffer(), "AUX-%u", i-2);
     }
 
+    sprintf(profileKey, "InfoBoxPanel%uGeometry", i);
+    if (!map.GetEnum(profileKey, panel.geometry))
+      panel.geometry = settings.geometry;
+
     for (unsigned j = 0; j < panel.MAX_CONTENTS; ++j) {
       sprintf(profileKey, "InfoBoxPanel%uBox%u", i, j);
       GetIBType(map, profileKey, panel.contents[j]);
@@ -148,6 +152,9 @@ Profile::Save(ProfileMap &map,
     sprintf(profileKey, "InfoBoxPanel%uName", index);
     map.Set(profileKey, panel.name);
   }
+
+  sprintf(profileKey, "InfoBoxPanel%uGeometry", index);
+  map.Set(profileKey, (unsigned)panel.geometry);
 
   for (unsigned j = 0; j < panel.MAX_CONTENTS; ++j) {
     sprintf(profileKey, "InfoBoxPanel%uBox%u", index, j);
