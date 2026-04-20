@@ -26,6 +26,33 @@
 
 #include <algorithm> // for std::clamp()
 
+[[gnu::pure]]
+static unsigned
+GetMapItemArmThreshold() noexcept
+{
+  /* allow a bigger threshold on touch screens */
+  return Layout::Scale(HasTouchScreen() ? 50 : 50);//10
+}
+
+[[gnu::pure]]
+static unsigned
+GetPanActivationThreshold() noexcept
+{
+  /* Touch input is prone to small unwanted movements while the user
+     settles the finger on the screen.  Mouse dragging should remain
+     almost unchanged. */
+  return Layout::Scale(HasTouchScreen() ? 18 : 18); //3
+}
+
+[[gnu::pure]]
+static unsigned
+GetPanReleaseThreshold() noexcept
+{
+  /* Ignore tiny touch movements right before finger-up, which are
+     common in turbulence. */
+  return Layout::Scale(HasTouchScreen() ? 14 : 14); //2
+}
+
 void
 GlueMapWindow::OnCreate()
 {
@@ -65,8 +92,7 @@ GlueMapWindow::OnMouseDouble([[maybe_unused]] PixelPoint p) noexcept
 bool
 GlueMapWindow::OnMouseMove(PixelPoint p, unsigned keys) noexcept
 {
-  /* allow a bigger threshold on touch screens */
-  const unsigned threshold = Layout::Scale(HasTouchScreen() ? 50 : 10);
+  const unsigned threshold = GetMapItemArmThreshold();
   if (drag_mode != DRAG_NONE && arm_mapitem_list &&
       ((unsigned)ManhattanDistance(drag_start, p) > threshold ||
        mouse_down_clock.Elapsed() > std::chrono::milliseconds(200)))
@@ -80,9 +106,20 @@ GlueMapWindow::OnMouseMove(PixelPoint p, unsigned keys) noexcept
   case DRAG_MULTI_TOUCH_PAN:
 #endif
   case DRAG_PAN:
-    SetLocation(drag_projection.GetGeoLocation()
-                + drag_start_geopoint
-                - drag_projection.ScreenToGeo(p));
+    drag_last = p;
+
+    if (!drag_pan_active) {
+      const unsigned pan_threshold = GetPanActivationThreshold();
+      if ((unsigned)ManhattanDistance(drag_start, p) < pan_threshold)
+        return true;
+
+      drag_pan_active = true;
+    }
+
+    SetLocation(drag_projection.GetGeoLocation() +
+                drag_start_geopoint -
+                drag_projection.ScreenToGeo(p));
+    drag_last_stable = p;
     QuickRedraw();
 
 #ifdef ENABLE_OPENGL
@@ -150,6 +187,9 @@ GlueMapWindow::OnMouseDown(PixelPoint p) noexcept
   SetFocus();
 
   drag_start = p;
+  drag_last = p;
+  drag_last_stable = p;
+  drag_pan_active = false;
 
   if (!visible_projection.IsValid()) {
     gestures.Start(p, Layout::Scale(20));
@@ -226,6 +266,17 @@ GlueMapWindow::OnMouseUp(PixelPoint p) noexcept
 #endif
 
   case DRAG_PAN:
+    if (drag_pan_active) {
+      const unsigned release_threshold = GetPanReleaseThreshold();
+      if ((unsigned)ManhattanDistance(drag_last_stable, p) < release_threshold &&
+          drag_last != drag_last_stable) {
+        /* Ignore tiny last-moment pointer movement on release. */
+        SetLocation(drag_projection.GetGeoLocation() +
+                    drag_start_geopoint -
+                    drag_projection.ScreenToGeo(drag_last_stable));
+      }
+    }
+
 #ifndef ENABLE_OPENGL
     /* allow the use of the stretched last buffer for the next two
        redraws */

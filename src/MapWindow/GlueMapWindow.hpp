@@ -66,6 +66,9 @@ class GlueMapWindow : public MapWindow {
 
   GeoPoint drag_start_geopoint;
   PixelPoint drag_start;
+  PixelPoint drag_last;
+  PixelPoint drag_last_stable;
+  bool drag_pan_active = false;
   TrackingGestureManager gestures;
   bool ignore_single_click = false;
 
