@@ -249,6 +249,10 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc) noexcept
   draw_sw.Mark("DrawTask");
   DrawTask(canvas);
 
+  draw_sw.Mark("DrawAlternateLines");
+  if (basic.location_available)
+    DrawAlternateLines(canvas, aircraft_pos);
+
   draw_sw.Mark("DrawWaypoints");
   DrawWaypoints(canvas);
 

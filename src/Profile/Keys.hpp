@@ -186,6 +186,7 @@ constexpr std::string_view LoggerTimeStepCircling = "LoggerTimeStepCircling";
 
 constexpr std::string_view SafetyMacCready = "SafetyMacCready";
 constexpr std::string_view AbortTaskMode = "AbortTaskMode";
+constexpr std::string_view DrawLinesToAlternates = "DrawLinesToAlternates";
 constexpr std::string_view AutoMcMode = "AutoMcMode";
 constexpr std::string_view AutoMc = "AutoMc";
 constexpr std::string_view EnableExternalTriggerCruise = "EnableExternalTriggerCruise";

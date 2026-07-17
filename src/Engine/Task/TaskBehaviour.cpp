@@ -44,6 +44,7 @@ TaskBehaviour::SetDefaults()
   ordered_defaults.SetDefaults();
   route_planner.SetDefaults();
   turn_back_marker_enabled = false;
+  draw_lines_to_alternates = false;
   abort_task_mode = AbortTaskMode::SIMPLE;
 }
 

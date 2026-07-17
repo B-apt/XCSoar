@@ -7,6 +7,7 @@
 #include "Engine/Waypoint/Ptr.hpp"
 
 #include <cstddef>
+#include <mutex>
 
 enum class AlternateInfoBoxMode : uint8_t {
   AUTO,
@@ -21,6 +22,11 @@ enum class AlternateInfoBoxSlot : uint8_t {
   FIRST,
   SECOND,
 };
+
+/**
+ * Mutex protecting access to alternate_slot_states.
+ */
+extern std::mutex alternate_state_mutex;
 
 [[gnu::const]]
 constexpr unsigned
@@ -66,6 +72,14 @@ SetAlternateInfoBoxMode(AlternateInfoBoxSlot slot,
  */
 WaypointPtr
 GetManualAlternateWaypoint(AlternateInfoBoxSlot slot) noexcept;
+
+/**
+ * Returns the waypoint for the specified alternate slot without locking.
+ * Caller must hold alternate_state_mutex.
+ */
+[[gnu::const]]
+WaypointPtr
+GetAlternateSlotWaypointUnlocked(AlternateInfoBoxSlot slot) noexcept;
 
 /**
  * Stores the manually selected waypoint for the specified alternate

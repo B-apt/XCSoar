@@ -1,4 +1,5 @@
 LIBMAPWINDOW_SOURCES = \
+	$(SRC)/MapWindow/MapWindowAlternate.cpp \
 	$(SRC)/MapWindow/MapWindowBlackboard.cpp \
 	$(SRC)/MapWindow/MapCanvas.cpp \
 	$(SRC)/MapWindow/StencilMapCanvas.cpp \

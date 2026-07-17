@@ -21,6 +21,8 @@
 #include <array>
 #include <mutex>
 
+std::mutex alternate_state_mutex;
+
 namespace {
 
 struct AlternateSlotState {
@@ -43,7 +45,6 @@ struct ResolvedAlternateInfo {
   }
 };
 
-std::mutex alternate_state_mutex;
 /**
  * Runtime-only manual/auto state for the two logical Alternate
  * InfoBox slots.  The three InfoBox variants for each slot share the
@@ -87,12 +88,6 @@ AlternateInfoBoxMode
 GetAlternateInfoBoxModeUnlocked(AlternateInfoBoxSlot slot) noexcept
 {
   return alternate_slot_states[ToAlternateInfoBoxSlotIndex(slot)].mode;
-}
-
-WaypointPtr
-GetManualAlternateWaypointUnlocked(AlternateInfoBoxSlot slot) noexcept
-{
-  return alternate_slot_states[ToAlternateInfoBoxSlotIndex(slot)].waypoint;
 }
 
 [[gnu::pure]]
@@ -179,6 +174,12 @@ GetAlternateInfoBoxMode(AlternateInfoBoxSlot slot) noexcept
   return GetAlternateInfoBoxModeUnlocked(slot);
 }
 
+WaypointPtr
+GetAlternateSlotWaypointUnlocked(AlternateInfoBoxSlot slot) noexcept
+{
+  return alternate_slot_states[ToAlternateInfoBoxSlotIndex(slot)].waypoint;
+}
+
 void
 SetAlternateInfoBoxMode(AlternateInfoBoxSlot slot,
                         AlternateInfoBoxMode mode) noexcept
@@ -198,7 +199,7 @@ WaypointPtr
 GetManualAlternateWaypoint(AlternateInfoBoxSlot slot) noexcept
 {
   const std::scoped_lock lock(alternate_state_mutex);
-  return GetManualAlternateWaypointUnlocked(slot);
+  return GetAlternateSlotWaypointUnlocked(slot);
 }
 
 void

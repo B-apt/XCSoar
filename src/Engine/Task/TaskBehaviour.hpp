@@ -126,6 +126,9 @@ struct TaskBehaviour {
   /** Show a turn-back marker at the point where arrival altitude becomes 0 */
   bool turn_back_marker_enabled;
 
+  /** Draw dashed blue lines from aircraft to alternate slots (1 and 2) */
+  bool draw_lines_to_alternates;
+
   void SetDefaults();
 
   /**

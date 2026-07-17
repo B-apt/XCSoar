@@ -25,6 +25,7 @@ enum ControlIndex {
   SafetyMC,
   RiskFactor,
   TurnBackMarker,
+  DrawLinesToAlternates,
 };
 
 class SafetyFactorsConfigPanel final : public RowFormWidget {
@@ -113,6 +114,10 @@ SafetyFactorsConfigPanel::Prepare(ContainerWindow &parent,
                "The triangle is only shown during cruise when the target "
                "is reachable."),
              task_behaviour.turn_back_marker_enabled);
+
+  AddBoolean(_("Draw lines to alternates"),
+             _("Draw dashed blue lines from aircraft to alternate waypoints (1 and 2)."),
+             task_behaviour.draw_lines_to_alternates);
 }
 
 bool
@@ -162,6 +167,11 @@ SafetyFactorsConfigPanel::Save(bool &_changed) noexcept
 
   if (SaveValue(TurnBackMarker, task_behaviour.turn_back_marker_enabled)) {
     Profile::Set(ProfileKeys::TurnBackMarkerEnabled, task_behaviour.turn_back_marker_enabled);
+    changed = true;
+  }
+
+  if (SaveValue(DrawLinesToAlternates, task_behaviour.draw_lines_to_alternates)) {
+    Profile::Set(ProfileKeys::DrawLinesToAlternates, task_behaviour.draw_lines_to_alternates);
     changed = true;
   }
 

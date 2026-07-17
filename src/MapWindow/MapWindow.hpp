@@ -20,6 +20,8 @@
 #include "Weather/Features.hpp"
 #include "Tracking/SkyLines/Features.hpp"
 
+#include "InfoBoxes/Content/Alternate.hpp"
+
 #include <memory>
 
 struct MapLook;
@@ -288,6 +290,7 @@ protected:
   void DrawDistanceRings(Canvas &canvas) const noexcept;
   void DrawContest(Canvas &canvas) noexcept;
   void DrawTask(Canvas &canvas) noexcept;
+  void DrawAlternateLines(Canvas &canvas, PixelPoint aircraft_pos) noexcept;
   void DrawRoute(Canvas &canvas) noexcept;
   void DrawTaskOffTrackIndicator(Canvas &canvas) noexcept;
   void DrawWaves(Canvas &canvas) noexcept;
