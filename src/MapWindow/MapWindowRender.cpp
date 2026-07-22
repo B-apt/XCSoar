@@ -21,6 +21,10 @@
 #include "Weather/NOAAStore.hpp"
 #endif
 
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+#include "MapLibreBaseMap.hpp"
+#endif
+
 void
 MapWindow::RenderTrackBearing(Canvas &canvas,
                               const PixelPoint aircraft_pos) noexcept
@@ -28,6 +32,20 @@ MapWindow::RenderTrackBearing(Canvas &canvas,
   // default rendering option assumes circling is off, so ground-relative
   DrawTrackBearing(canvas, aircraft_pos, false);
 }
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+
+inline bool
+MapWindow::RenderMapLibreBase(Canvas &canvas, const PixelRect &rc) noexcept
+{
+  if (!maplibre_basemap || !maplibre_basemap->IsUsable())
+    return false;
+
+  maplibre_basemap->SetCamera(render_projection);
+  return maplibre_basemap->Render(canvas, rc);
+}
+
+#endif
 
 inline void
 MapWindow::RenderTerrain(Canvas &canvas) noexcept
@@ -228,9 +246,21 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc) noexcept
 
   //////////////////////////////////////////////// items on ground
 
-  // Render terrain, groundline and topography
-  draw_sw.Mark("RenderTerrain");
-  RenderTerrain(canvas);
+  // Render terrain, groundline and topography -- or, if a MapLibre
+  // bundle was loaded successfully, its rendered basemap instead.
+  // Either way, RasterTerrain/GlideComputer/airspace ground levels/
+  // route+reach/final-glide-through-terrain calculations below are
+  // unaffected: only this visual background differs.
+  bool have_maplibre_base = false;
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  draw_sw.Mark("RenderMapLibreBase");
+  have_maplibre_base = RenderMapLibreBase(canvas, rc);
+#endif
+
+  if (!have_maplibre_base) {
+    draw_sw.Mark("RenderTerrain");
+    RenderTerrain(canvas);
+  }
 
   draw_sw.Mark("RenderRasp");
   RenderRasp(canvas);
@@ -240,8 +270,10 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc) noexcept
     skysight->Render();
 #endif
 
-  draw_sw.Mark("RenderTopography");
-  RenderTopography(canvas);
+  if (!have_maplibre_base) {
+    draw_sw.Mark("RenderTopography");
+    RenderTopography(canvas);
+  }
 
   draw_sw.Mark("RenderOverlays");
   RenderOverlays(canvas);

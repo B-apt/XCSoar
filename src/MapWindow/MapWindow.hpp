@@ -38,6 +38,7 @@ class GlideComputer;
 class ContainerWindow;
 class NOAAStore;
 class MapOverlay;
+class MapLibreBaseMap;
 
 namespace SkyLinesTracking {
   struct Data;
@@ -133,6 +134,10 @@ protected:
 #else
   std::unique_ptr<MapOverlay> overlay;
 #endif
+#endif
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  std::unique_ptr<MapLibreBaseMap> maplibre_basemap;
 #endif
 
   const TrafficLook &traffic_look;
@@ -262,6 +267,16 @@ public:
   }
 #endif
 
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  /**
+   * (Re)load the "maplibre/" bundle from the currently configured map
+   * file, if any.  No-op with no visible effect if unavailable or
+   * invalid -- the map keeps rendering native terrain/topography in
+   * that case.
+   */
+  void SetMapLibreBundle() noexcept;
+#endif
+
 #ifdef HAVE_NOAA
   void SetNOAAStore(NOAAStore *_noaa_store) noexcept {
     noaa_store = _noaa_store;
@@ -383,6 +398,16 @@ protected:
   void OnPaintBuffer(Canvas& canvas) noexcept override;
 
 private:
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  /**
+   * Renders the MapLibre basemap in place of RenderTerrain() +
+   * RenderTopography(), if a bundle was loaded successfully.
+   * @return true if the MapLibre basemap was drawn (callers must then
+   * skip RenderTerrain()/RenderTopography() for this frame)
+   */
+  bool RenderMapLibreBase(Canvas &canvas, const PixelRect &rc) noexcept;
+#endif
+
   /**
    * Renders the terrain background
    * @param canvas The drawing canvas

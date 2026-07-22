@@ -188,6 +188,7 @@ include $(topdir)/build/nsis.mk
 include $(topdir)/build/libpng.mk
 include $(topdir)/build/libjpeg.mk
 include $(topdir)/build/libsqlite.mk
+include $(topdir)/build/maplibre.mk
 include $(topdir)/build/libtiff.mk
 include $(topdir)/build/netcdf.mk
 include $(topdir)/build/coregraphics.mk

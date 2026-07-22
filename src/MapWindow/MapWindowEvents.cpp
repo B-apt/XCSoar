@@ -7,6 +7,10 @@
 #include "ui/canvas/WindowCanvas.hpp"
 #endif
 
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+#include "MapLibreBaseMap.hpp"
+#endif
+
 #include "Weather/Features.hpp"
 
 void
@@ -24,6 +28,11 @@ MapWindow::OnResize(PixelSize new_size) noexcept
 
   visible_projection.SetScreenSize(new_size);
   UpdateScreenBounds();
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  if (maplibre_basemap)
+    maplibre_basemap->Resize(new_size);
+#endif
 }
 
 void
@@ -46,6 +55,10 @@ MapWindow::OnCreate()
 #ifndef ENABLE_OPENGL
   buffer_projection = visible_projection;
 #endif
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  maplibre_basemap = std::make_unique<MapLibreBaseMap>(size);
+#endif
 }
 
 void
@@ -59,6 +72,10 @@ MapWindow::OnDestroy() noexcept
   SetTopography(nullptr);
   SetTerrain(nullptr);
   SetRasp(nullptr);
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+  maplibre_basemap.reset();
+#endif
 
 #ifndef ENABLE_OPENGL
   buffer_canvas.Destroy();

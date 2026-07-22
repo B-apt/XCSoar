@@ -668,6 +668,10 @@ Startup(UI::Display &display)
     map_window->SetTerrain(data_components->terrain.get());
     map_window->SetRasp(rasp);
 
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+    map_window->SetMapLibreBundle();
+#endif
+
 #ifdef HAVE_NOAA
     map_window->SetNOAAStore(noaa_store);
 #endif

@@ -14,6 +14,10 @@
 #include "ui/canvas/opengl/Scissor.hpp"
 #endif
 
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+#include "MapLibreBaseMap.hpp"
+#endif
+
 /**
  * Constructor of the MapWindow class
  */
@@ -66,6 +70,17 @@ MapWindow::SetOverlay(unsigned index, std::unique_ptr<MapOverlay> &&_overlay) no
     overlay[index] = std::move(_overlay);
 }
 #endif
+
+#endif
+
+#ifdef ENABLE_MAPLIBRE_BASEMAP
+
+void
+MapWindow::SetMapLibreBundle() noexcept
+{
+  if (maplibre_basemap)
+    maplibre_basemap->LoadBundle();
+}
 
 #endif
 

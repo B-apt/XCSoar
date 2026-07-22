@@ -12,6 +12,7 @@ XCSoar
    release
    architecture
    weather_overlays
+   maplibre_basemap_poc
    data_directory
    input_events
    i18n

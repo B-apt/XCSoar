@@ -47,4 +47,12 @@ LIBMAPWINDOW_DEPENDS += IO SQLITE
 endif
 endif
 
+ifeq ($(MAPLIBRE_BASEMAP),y)
+LIBMAPWINDOW_SOURCES += \
+	$(SRC)/MapWindow/MapLibreBaseMap.cpp \
+	$(SRC)/MapWindow/MapLibreGLXContext.cpp
+
+LIBMAPWINDOW_DEPENDS += IO MAPLIBRE
+endif
+
 $(eval $(call link-library,libmapwindow,LIBMAPWINDOW))
