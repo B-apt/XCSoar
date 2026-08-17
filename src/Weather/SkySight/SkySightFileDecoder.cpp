@@ -512,7 +512,14 @@ PreparePayload(Path path, const CancellationCheck &is_cancelled)
 
 #if defined(USE_GEOTIFF) && defined(HAVE_SKYSIGHT_NETCDF)
 
-#if TIFFLIB_VERSION > 20220520
+/* XTIFFOpenExt() takes libtiff's TIFFOpenOptions, so it needs both a
+   libtiff that has them and a libgeotiff that wraps them (1.7.2+);
+   TIFFLIB_VERSION alone is not enough. */
+#if TIFFLIB_VERSION > 20220520 && LIBGEOTIFF_VERSION >= 1720
+#define HAVE_XTIFF_OPEN_EXT
+#endif
+
+#ifdef HAVE_XTIFF_OPEN_EXT
 void
 LogTiffMessage(const char *module, const char *fmt, va_list ap)
 {
@@ -537,7 +544,7 @@ TiffErrorHandler(TIFF *, void *, const char *module, const char *fmt,
 TIFF *
 OpenGeoTiff(Path path, const char *mode)
 {
-#if TIFFLIB_VERSION > 20220520
+#ifdef HAVE_XTIFF_OPEN_EXT
   TIFFOpenOptions *options = TIFFOpenOptionsAlloc();
   if (options == nullptr)
     throw std::bad_alloc();
