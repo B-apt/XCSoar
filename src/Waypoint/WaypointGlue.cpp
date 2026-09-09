@@ -10,12 +10,15 @@
 #include "Profile/Profile.hpp"
 #include "Repository/FileType.hpp"
 #include "Waypoint/Waypoints.hpp"
+#include "Waypoint/Isolation.hpp"
 #include "WaypointFileType.hpp"
 #include "WaypointReader.hpp"
 #include "io/MapFile.hpp"
 #include "io/ZipArchive.hpp"
 #include "lib/fmt/PathFormatter.hpp"
 #include "system/Path.hpp"
+
+#include <chrono>
 
 namespace WaypointGlue {
 
@@ -128,7 +131,16 @@ LoadWaypoints(Waypoints &way_points, const RasterTerrain *terrain,
   // Optimise the waypoint list after attaching new waypoints
   way_points.Optimise();
 
-  LogFmt("LoadWaypoints: loaded {} waypoints", way_points.size());
+  /* rank mountains and passes so the map can declutter them; needs the
+     projected locations set up by Optimise() above */
+  const auto isolation_start = std::chrono::steady_clock::now();
+  CalculateMountainIsolation(way_points);
+  const auto isolation_duration =
+    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()
+                                                          - isolation_start);
+
+  LogFmt("LoadWaypoints: loaded {} waypoints, mountain isolation in {} ms",
+         way_points.size(), isolation_duration.count());
 
   // Return whether waypoints have been loaded into the waypoint list
   return found;

@@ -31,6 +31,7 @@ WaypointRendererSettings::LoadFromProfile() noexcept
   GetEnum(ProfileKeys::AppIndLandable, landable_style);
   Get(ProfileKeys::AppUseSWLandablesRendering, vector_landable_rendering);
   Get(ProfileKeys::AppScaleRunwayLength, scale_runway_length);
+  Get(ProfileKeys::WaypointDeclutterMountains, declutter_mountains);
   Get(ProfileKeys::AppLandableRenderingScale, landable_rendering_scale);
   Get(ProfileKeys::MapWaypointIconScale, map_waypoint_icon_scale);
 }

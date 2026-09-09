@@ -15,6 +15,7 @@ enum ControlIndex {
   WaypointArrivalHeightDisplay,
   WaypointLabelStyle,
   WaypointLabelSelection,
+  WaypointDeclutterMountains,
   AppIndLandable,
   MapWaypointIconScale,
   AppUseSWLandablesRendering,
@@ -146,6 +147,14 @@ WaypointDisplayConfigPanel::Prepare(ContainerWindow &parent,
           wp_selection_list, (unsigned)settings.label_selection);
   SetExpertRow(WaypointLabelSelection);
 
+  AddBoolean(_("Apply declutter to waypoint types mountains/passes"),
+             _("[Off] Draw every mountain top and mountain pass waypoint.\n"
+                 "[On] Draw only the most isolated ones, so that dense summit "
+                 "files stay readable. Passes are ranked separately from tops, "
+                 "and zooming in reveals more. Other waypoint types are not "
+                 "affected."),
+             settings.declutter_mountains);
+
   static constexpr StaticEnumChoice wp_style_list[] = {
     { WaypointRendererSettings::LandableStyle::PURPLE_CIRCLE,
       N_("Purple circle"),
@@ -211,6 +220,10 @@ WaypointDisplayConfigPanel::Save(bool &_changed) noexcept
 
   changed |= SaveValueEnum(WaypointLabelSelection, ProfileKeys::WaypointLabelSelection,
                            settings.label_selection);
+
+  changed |= SaveValue(WaypointDeclutterMountains,
+                       ProfileKeys::WaypointDeclutterMountains,
+                       settings.declutter_mountains);
 
   changed |= SaveValueEnum(AppIndLandable, ProfileKeys::AppIndLandable, settings.landable_style);
 

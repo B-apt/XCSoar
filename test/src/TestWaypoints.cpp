@@ -2,10 +2,12 @@
 // Copyright The XCSoar Project
 
 #include "Waypoint/Waypoints.hpp"
+#include "Waypoint/Isolation.hpp"
 #include "Geo/GeoVector.hpp"
 #include "test_debug.hpp"
 #include "util/Macros.hpp"
 
+#include <algorithm>
 #include <functional>
 
 #include <stdio.h>
@@ -485,13 +487,149 @@ TestNameSubstringShortname()
   ok1(dual_matched && dual_matched->name == "ALPHA FIELD");
 }
 
+static void
+AddMountain(Waypoints &waypoints, const GeoPoint &location,
+            double elevation, Waypoint::Type type)
+{
+  Waypoint waypoint{location};
+  waypoint.elevation = elevation;
+  waypoint.has_elevation = true;
+  waypoint.type = type;
+
+  StaticString<256> buffer;
+  buffer.Format("Mountain #%u", waypoints.size() + 1);
+  waypoint.name = buffer;
+
+  waypoints.Append(std::move(waypoint));
+}
+
+/**
+ * A line of peaks 200 m apart, descending: only the highest one is fully
+ * isolated, every other one is dominated by its immediate neighbour.
+ */
+static void
+TestMountainIsolationRidge()
+{
+  Waypoints waypoints;
+  const GeoPoint center(Angle::Degrees(46), Angle::Degrees(7));
+
+  for (unsigned i = 0; i < 5; ++i)
+    AddMountain(waypoints,
+                GeoVector(200. * i, Angle::Degrees(0)).EndPoint(center),
+                3000 - 100. * i, Waypoint::Type::MOUNTAIN_TOP);
+
+  waypoints.Optimise();
+  CalculateMountainIsolation(waypoints);
+
+  ok1(waypoints.LookupId(1)->isolation == MOUNTAIN_ISOLATION_MAX);
+
+  for (unsigned id = 2; id <= 5; ++id) {
+    const double isolation = waypoints.LookupId(id)->isolation;
+    ok1(isolation > 190 && isolation < 210);
+  }
+}
+
+/**
+ * Two peaks of exactly the same elevation: the #Waypoint::id tiebreak
+ * must make exactly one of them win, not both and not neither.
+ */
+static void
+TestMountainIsolationTie()
+{
+  Waypoints waypoints;
+  const GeoPoint center(Angle::Degrees(46), Angle::Degrees(7));
+
+  AddMountain(waypoints, center, 3000, Waypoint::Type::MOUNTAIN_TOP);
+  AddMountain(waypoints, GeoVector(300, Angle::Degrees(90)).EndPoint(center),
+              3000, Waypoint::Type::MOUNTAIN_TOP);
+
+  waypoints.Optimise();
+  CalculateMountainIsolation(waypoints);
+
+  const double a = waypoints.LookupId(1)->isolation;
+  const double b = waypoints.LookupId(2)->isolation;
+
+  ok1((a == MOUNTAIN_ISOLATION_MAX) != (b == MOUNTAIN_ISOLATION_MAX));
+
+  const double loser = std::min(a, b);
+  ok1(loser > 290 && loser < 310);
+}
+
+/**
+ * Passes are ranked against passes only, and no other waypoint type is
+ * ranked at all.
+ */
+static void
+TestMountainIsolationPools()
+{
+  Waypoints waypoints;
+  const GeoPoint center(Angle::Degrees(46), Angle::Degrees(7));
+
+  AddMountain(waypoints, center, 4000, Waypoint::Type::MOUNTAIN_TOP);
+  AddMountain(waypoints, GeoVector(100, Angle::Degrees(90)).EndPoint(center),
+              2000, Waypoint::Type::MOUNTAIN_PASS);
+  AddMountain(waypoints, GeoVector(100, Angle::Degrees(180)).EndPoint(center),
+              500, Waypoint::Type::NORMAL);
+  AddMountain(waypoints, GeoVector(100, Angle::Degrees(270)).EndPoint(center),
+              500, Waypoint::Type::AIRFIELD);
+
+  waypoints.Optimise();
+  CalculateMountainIsolation(waypoints);
+
+  ok1(waypoints.LookupId(1)->isolation == MOUNTAIN_ISOLATION_MAX);
+  ok1(waypoints.LookupId(2)->isolation == MOUNTAIN_ISOLATION_MAX);
+
+  ok1(waypoints.LookupId(3)->isolation < 0);
+  ok1(waypoints.LookupId(4)->isolation < 0);
+}
+
+/**
+ * The drawn set must grow as the required separation shrinks, and never
+ * lose a waypoint on the way, so that zooming in only ever reveals.
+ */
+static void
+TestMountainIsolationNesting()
+{
+  Waypoints waypoints;
+  const GeoPoint center(Angle::Degrees(46), Angle::Degrees(7));
+
+  for (unsigned i = 0; i < 40; ++i)
+    AddMountain(waypoints,
+                GeoVector(150. * i * i + 100,
+                          Angle::Degrees(37. * i)).EndPoint(center),
+                4000 - 50. * i, Waypoint::Type::MOUNTAIN_TOP);
+
+  waypoints.Optimise();
+  CalculateMountainIsolation(waypoints);
+
+  unsigned previous = 0;
+  bool nested = true, grew = false;
+
+  for (const double separation : {8000., 4000., 2000., 1000., 500.}) {
+    unsigned count = 0;
+    for (const auto &i : waypoints)
+      if (i->isolation >= separation)
+        ++count;
+
+    if (count < previous)
+      nested = false;
+    if (count > previous)
+      grew = true;
+
+    previous = count;
+  }
+
+  ok1(nested);
+  ok1(grew);
+}
+
 int
 main(int argc, char** argv)
 {
   if (!ParseArgs(argc, argv))
     return 0;
 
-  plan_tests(52 + 9 + 6 + 17);
+  plan_tests(52 + 9 + 6 + 17 + 13);
 
   Waypoints waypoints;
   GeoPoint center(Angle::Degrees(51.4), Angle::Degrees(7.85));
@@ -520,6 +658,11 @@ main(int argc, char** argv)
   waypoints.Clear();
   ok1(waypoints.IsEmpty());
   ok1(waypoints.size() == 0);
+
+  TestMountainIsolationRidge();
+  TestMountainIsolationTie();
+  TestMountainIsolationPools();
+  TestMountainIsolationNesting();
 
   return exit_status();
 }

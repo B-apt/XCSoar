@@ -53,6 +53,13 @@ struct WaypointRendererSettings {
 
   bool scale_runway_length;
 
+  /**
+   * Thin out MOUNTAIN_TOP / MOUNTAIN_PASS waypoints on the map, keeping
+   * the most isolated ones (see #Waypoint::isolation).  Other waypoint
+   * types are never affected.
+   */
+  bool declutter_mountains;
+
   int landable_rendering_scale;
 
   /**
@@ -70,6 +77,8 @@ struct WaypointRendererSettings {
     landable_style = LandableStyle::PURPLE_CIRCLE;
     vector_landable_rendering = true;
     scale_runway_length = false;
+    // TODO: flip to false before submitting the PR
+    declutter_mountains = true;
     landable_rendering_scale = 100;
     map_waypoint_icon_scale = 100;
   }

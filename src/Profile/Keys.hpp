@@ -112,6 +112,7 @@ constexpr std::string_view AppUseSWLandablesRendering = "AppUseSWLandablesRender
 constexpr std::string_view AppLandableRenderingScale = "AppLandableRenderingScale";
 constexpr std::string_view MapWaypointIconScale = "MapWaypointIconScale";
 constexpr std::string_view AppScaleRunwayLength = "AppScaleRunwayLength";
+constexpr std::string_view WaypointDeclutterMountains = "WaypointDeclutterMountains";
 
 /** deprecated, use #DarkMode */
 constexpr std::string_view AppInverseInfoBox = "AppInverseInfoBox";

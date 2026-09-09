@@ -128,6 +128,17 @@ struct Waypoint {
    */
   bool has_elevation = false;
 
+  /**
+   * Distance (m) to the nearest higher-ranked mountain waypoint of the
+   * same #Type, i.e. the topographic isolation of a #Type::MOUNTAIN_TOP
+   * or #Type::MOUNTAIN_PASS.  Used to declutter those two types on the
+   * map; see #CalculateMountainIsolation().
+   *
+   * Negative means "not computed" (every other type, and anything added
+   * after the load-time pass) and is treated as always visible.
+   */
+  float isolation = -1;
+
 #ifndef NDEBUG
   bool flat_location_initialised = false;
 #endif

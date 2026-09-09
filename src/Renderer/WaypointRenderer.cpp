@@ -6,7 +6,9 @@
 #include "WaypointRendererSettings.hpp"
 #include "WaypointIconRenderer.hpp"
 #include "WaypointLabelList.hpp"
+#include "MountainDeclutter.hpp"
 #include "Projection/MapWindowProjection.hpp"
+#include "Screen/Layout.hpp"
 #include "Computer/Settings.hpp"
 #include "Task/Visitors/TaskPointVisitor.hpp"
 #include "Engine/Util/Gradient.hpp"
@@ -188,6 +190,13 @@ class WaypointVisitorMap final
   bool task_valid;
 
   /**
+   * The #Waypoint::isolation a mountain waypoint needs at the current
+   * map scale to be drawn, or a negative value when the declutter is
+   * disabled.
+   */
+  const double mountain_min_separation;
+
+  /**
    * A list of waypoints that are going to be drawn.  This list is
    * filled in the Visitor methods.  In the second stage, their
    * reachability is calculated, and the third stage draws them.  This
@@ -212,6 +221,9 @@ public:
      settings(_settings), look(_look), task_behaviour(_task_behaviour),
      basic(_basic),
      task_valid(false),
+     mountain_min_separation(_settings.declutter_mountains
+                             ? _projection.DistancePixelsToMeters(Layout::Scale(MOUNTAIN_DECLUTTER_SEPARATION_PX))
+                             : -1),
      icon_renderer(settings, look,
                    _canvas,
                    projection.GetMapScale() > 4000,
@@ -415,6 +427,10 @@ protected:
       return;
 
     if (!projection.WaypointInScaleFilter(*way_point) && !in_task)
+      return;
+
+    if (!in_task && mountain_min_separation > 0 &&
+        IsMountainDecluttered(*way_point, mountain_min_separation))
       return;
 
     if (auto p = projection.GeoToScreenIfVisible(way_point->location)) {
